@@ -55,11 +55,27 @@
     letter-spacing: .15em;
     text-transform: uppercase;
     margin: 0 0 clamp(2.5rem, 7vh, 4rem);
-    background: linear-gradient(100deg, var(--accent-a) 0%, var(--accent-b) 100%);
+    width: fit-content;
+  }
+  /* The K is a spanning tree, not a glyph. Its viewBox is the exact bounding box of the
+     points, so the letter sits on the baseline; the dots overhang it the way round shapes
+     are supposed to, which is why this one is allowed to overflow.
+     It closes at 2.00s + 1.2s = 3.2s — a beat before the graph closes at 4.22s. */
+  .mark-k {
+    height: .7em;
+    width: auto;
+    overflow: visible;
+    vertical-align: baseline;
+    margin-right: .16em;
+    animation: connected 1.65s ease-out 3.2s both;
+  }
+  /* The wordmark gradient used to sweep across all seven letters. The K now paints itself,
+     so the text picks the sweep up where the K leaves off rather than restarting at purple. */
+  .mark-rest {
+    background: linear-gradient(100deg, #b885fb 0%, var(--accent-b) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    width: fit-content;
   }
 
   /* ---- stage: copy left, graph right (desktop) / graph above copy (mobile) ---- */
@@ -131,38 +147,97 @@
     opacity: .62;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    animation: draw .85s ease-out forwards;
+    animation: draw 1.28s ease-out forwards;
   }
   .mst-node {
     fill: url(#kg);
     opacity: 0;
     transform-box: fill-box;
     transform-origin: center;
-    animation: pop .5s cubic-bezier(.2,.9,.3,1.2) forwards;
+    animation: pop .75s cubic-bezier(.2,.9,.3,1.2) forwards;
   }
   @keyframes draw { to { stroke-dashoffset: 0; } }
   @keyframes pop  { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
 
-  /* The last edge lands at 1.96s + 0.85s = 2.81s. The graph is connected exactly
+  /* The last edge lands at 2.94s + 1.28s = 4.22s. The graph is connected exactly
      then — one component — so that is the beat worth marking. */
-  .mst { animation: connected 1.1s ease-out 2.81s both; }
+  .mst { animation: connected 1.65s ease-out 4.22s both; }
   @keyframes connected {
     0%   { filter: none; }
     18%  { filter: drop-shadow(0 0 8px rgba(192,132,252,.55)) brightness(1.3); }
     100% { filter: drop-shadow(0 0 0 rgba(192,132,252,0)) brightness(1); }
   }
 
+  /* ---- the K in the wordmark: same algorithm, letter-shaped ---- */
+  .mk-edge {
+    stroke: url(#kgm);
+    stroke-width: 10;
+    stroke-linecap: round;
+    fill: none;
+    opacity: .72;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 1.2s ease-out forwards;
+  }
+  .mk-node {
+    fill: url(#kgm);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: pop .68s cubic-bezier(.2,.9,.3,1.2) forwards;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .mst-edge, .mst-node { animation: none; stroke-dashoffset: 0; opacity: 1; }
+    .mst-edge, .mst-node, .mk-edge, .mk-node { animation: none; stroke-dashoffset: 0; opacity: 1; }
     .mst-edge { opacity: .62; }
-    .mst { animation: none; filter: none; }
+    .mk-edge { opacity: .72; }
+    .mst, .mark-k { animation: none; filter: none; }
   }
 </style>
 </head>
 <body>
 
   <main class="col">
-    <div class="mark">Kruskal</div>
+    <div class="mark" role="img" aria-label="Kruskal"><svg class="mark-k" viewBox="14.8 -4.8 153.6 229.9"
+           aria-hidden="true" focusable="false">
+        <defs>
+          <!-- userSpaceOnUse, not the default objectBoundingBox: a bounding-box gradient
+               collapses on any exactly vertical or horizontal edge (zero-width box) and paints
+               it as nothing. Nothing here is axis-aligned today, but anchoring the gradient to
+               the letter removes the trap and gives one continuous sweep rather than restarting
+               it inside every dot.
+               The K covers the first tenth of the wordmark, so it carries the first tenth of
+               the sweep; .mark-rest continues from there. -->
+          <linearGradient id="kgm" gradientUnits="userSpaceOnUse" x1="14.8" y1="-4.8" x2="168.4" y2="225.1">
+            <stop offset="0%"   stop-color="#c084fc"/>
+            <stop offset="100%" stop-color="#ba85fc"/>
+          </linearGradient>
+        </defs>
+
+        <!-- True Euclidean MST of the eight points below, drawn in Kruskal order. There is no
+             point at the junction: the arm and the leg attach to the stem wherever the algorithm
+             puts them, which is what gives the joint its hand-made offset. -->
+        <g>
+          <path class="mk-edge" pathLength="1" style="animation-delay:0.68s" d="M 16.8 -4.8 L 18.8 69.2"/>
+          <path class="mk-edge" pathLength="1" style="animation-delay:0.90s" d="M 18.8 69.2 L 14.8 145.5"/>
+          <path class="mk-edge" pathLength="1" style="animation-delay:1.12s" d="M 14.8 145.5 L 90.1 160.3"/>
+          <path class="mk-edge" pathLength="1" style="animation-delay:1.34s" d="M 14.8 145.5 L 25 223.6"/>
+          <path class="mk-edge" pathLength="1" style="animation-delay:1.56s" d="M 18.8 69.2 L 97.2 51.7"/>
+          <path class="mk-edge" pathLength="1" style="animation-delay:1.78s" d="M 97.2 51.7 L 168.4 -2.7"/>
+          <path class="mk-edge" pathLength="1" style="animation-delay:2.00s" d="M 90.1 160.3 L 164.6 225.1"/>
+        </g>
+
+        <g>
+          <circle class="mk-node" style="animation-delay:0.05s" cx="16.8"  cy="-4.8"  r="20"/>
+          <circle class="mk-node" style="animation-delay:0.10s" cx="18.8"  cy="69.2"  r="20"/>
+          <circle class="mk-node" style="animation-delay:0.15s" cx="14.8"  cy="145.5" r="20"/>
+          <circle class="mk-node" style="animation-delay:0.20s" cx="25"    cy="223.6" r="20"/>
+          <circle class="mk-node" style="animation-delay:0.25s" cx="97.2"  cy="51.7"  r="20"/>
+          <circle class="mk-node" style="animation-delay:0.30s" cx="168.4" cy="-2.7"  r="20"/>
+          <circle class="mk-node" style="animation-delay:0.35s" cx="90.1"  cy="160.3" r="20"/>
+          <circle class="mk-node" style="animation-delay:0.40s" cx="164.6" cy="225.1" r="20"/>
+        </g>
+      </svg><span class="mark-rest">ruskal</span></div>
 
     <div class="stage">
 
@@ -178,32 +253,36 @@
 
           <!-- Edges are the true Euclidean MST of the eleven points below, drawn in
                Kruskal order: ascending weight, cheapest first. Fragments therefore
-               appear apart and merge late — that is the algorithm, not decoration. -->
+               appear apart and merge late — that is the algorithm, not decoration.
+
+               This one is also the no-script fallback: the script at the end of the page
+               swaps in a random member of the pool, of which this is the first. With
+               scripting off you still get a real spanning tree, just always the same one. -->
           <g>
-            <path class="mst-edge" pathLength="1" style="animation-delay:0.70s" d="M 205 177 L 155 193"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:0.84s" d="M 186 33  L 217 80"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:0.98s" d="M 45 177  L 68 232"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:1.12s" d="M 282 62  L 217 80"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:1.26s" d="M 200 253 L 155 193"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:1.40s" d="M 205 177 L 281 166"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:1.54s" d="M 117 111 L 33 82"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:1.68s" d="M 117 111 L 155 193"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:1.82s" d="M 155 193 L 68 232"/>
-            <path class="mst-edge" pathLength="1" style="animation-delay:1.96s" d="M 205 177 L 217 80"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:1.05s" d="M 205 177 L 155 193"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:1.26s" d="M 186 33  L 217 80"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:1.47s" d="M 45 177  L 68 232"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:1.68s" d="M 282 62  L 217 80"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:1.89s" d="M 200 253 L 155 193"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:2.10s" d="M 205 177 L 281 166"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:2.31s" d="M 117 111 L 33 82"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:2.52s" d="M 117 111 L 155 193"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:2.73s" d="M 155 193 L 68 232"/>
+            <path class="mst-edge" pathLength="1" style="animation-delay:2.94s" d="M 205 177 L 217 80"/>
           </g>
 
           <g>
-            <circle class="mst-node" style="animation-delay:0.05s" cx="205" cy="177" r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.10s" cx="186" cy="33"  r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.15s" cx="200" cy="253" r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.20s" cx="117" cy="111" r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.25s" cx="33"  cy="82"  r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.30s" cx="45"  cy="177" r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.35s" cx="281" cy="166" r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.40s" cx="282" cy="62"  r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.45s" cx="155" cy="193" r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.50s" cx="68"  cy="232" r="4.5"/>
-            <circle class="mst-node" style="animation-delay:0.55s" cx="217" cy="80"  r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.08s" cx="205" cy="177" r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.15s" cx="186" cy="33"  r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.23s" cx="200" cy="253" r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.30s" cx="117" cy="111" r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.38s" cx="33"  cy="82"  r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.45s" cx="45"  cy="177" r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.53s" cx="281" cy="166" r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.60s" cx="282" cy="62"  r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.68s" cx="155" cy="193" r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.75s" cx="68"  cy="232" r="4.5"/>
+            <circle class="mst-node" style="animation-delay:0.83s" cx="217" cy="80"  r="4.5"/>
           </g>
         </svg>
       </figure>
@@ -236,6 +315,101 @@
       VAT FR67980506638 · APE 62.01Z. Managing director: Philippe Galvan.
     </div>
   </footer>
+
+<script>
+// Progressive enhancement: pick one graph per page load and let Kruskal build it here, so
+// the shape on screen is the algorithm's output rather than a picture of one. Without this
+// script the markup above still renders a real spanning tree — just always the same one.
+(function () {
+  var svg = document.querySelector('svg.mst');
+  if (!svg) return;
+
+  // [node radius, stroke width, "x y,x y,…"] — every set already lives in the 340x280 viewBox,
+  // so the panel never changes size. Ursa Major was fitted with a uniform scale: a similarity
+  // transform preserves the minimum spanning tree, an uneven one would quietly rewrite it.
+  var POOL = [
+    [4.5, 1.25, "205 177,186 33,200 253,117 111,33 82,45 177,281 166,282 62,155 193,68 232,217 80"],
+    [4.5, 1.25, "80 161,162 215,227 114,65 34,35 222,298 132,270 38,148 67,242 243"],
+    [4.5, 1.25, "42 32,158 246,161 57,90 230,129 153,207 138,279 167,294 113,224 49,249 235,33 222,63 124"],
+    [4.5, 1.25, "57 64,219 194,231 73,268 238,41 178,295 79,225 27,92 102,84 237,166 129,183 234,139 43,252 157"],
+    [4.5, 1.25, "303 191,237 174,109 40,73 164,165 237,287 46,55 244,147 99,40 116,257 104"],
+
+    // URSA MAJOR — all nineteen stars of the Great Bear, one page load in six.
+    // Not a drawing of the constellation: these are the real star positions, and the bear
+    // that appears is genuinely their minimum spanning tree. The three shortest edges in the
+    // whole graph are the paw pairs. Hello to whoever opened the source.
+    [2.4, 1, "175.3 46.8,177.3 81.4,101.8 77.2,62.3 84.1,31.6 90.8,7.4 127,332.6 53.4,269.8 38.3," +
+             "249.8 64.3,303 135.2,298.4 140.9,223.1 168.3,217.7 177.4,160.2 231.6,160.4 241.7," +
+             "131.9 136.9,123.9 98.8,268.4 111.7,169.2 158"]
+  ];
+  var URSA = POOL.length - 1;
+
+  // Held constant so the last edge always finishes at 1.05 + 1.89 + 1.28 = 4.22s, which is when
+  // the CSS fires the "connected" glow. Denser graphs draw faster rather than running longer.
+  var NODE_START = 0.08, NODE_WINDOW = 0.75, EDGE_START = 1.05, EDGE_WINDOW = 1.89;
+
+  var choice = Math.floor(Math.random() * POOL.length);
+  var r = POOL[choice][0], strokeWidth = POOL[choice][1];
+  var pts = POOL[choice][2].split(',').map(function (p) {
+    var xy = p.trim().split(/\s+/);
+    return [parseFloat(xy[0]), parseFloat(xy[1])];
+  });
+
+  // Kruskal: every pair by length, keep an edge only when it joins two components.
+  var n = pts.length, cand = [];
+  for (var i = 0; i < n; i++)
+    for (var j = i + 1; j < n; j++)
+      cand.push([Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]), i, j]);
+  cand.sort(function (a, b) { return a[0] - b[0]; });
+
+  var parent = [];
+  for (var k = 0; k < n; k++) parent.push(k);
+  function find(x) { while (parent[x] !== x) x = parent[x] = parent[parent[x]]; return x; }
+
+  var tree = [];
+  for (var c = 0; c < cand.length && tree.length < n - 1; c++) {
+    var a = find(cand[c][1]), b = find(cand[c][2]);
+    if (a === b) continue;                       // would close a cycle
+    parent[a] = b;
+    tree.push(cand[c]);
+  }
+
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var key in attrs) e.setAttribute(key, attrs[key]);
+    return e;
+  }
+
+  var edges = el('g', {}), nodes = el('g', {});
+  var edgeStep = tree.length > 1 ? EDGE_WINDOW / (tree.length - 1) : 0;
+  tree.forEach(function (e, idx) {
+    var p = pts[e[1]], q = pts[e[2]];
+    edges.appendChild(el('path', {
+      'class': 'mst-edge', pathLength: 1,
+      d: 'M ' + p[0] + ' ' + p[1] + ' L ' + q[0] + ' ' + q[1],
+      style: 'animation-delay:' + (EDGE_START + idx * edgeStep).toFixed(3) + 's;' +
+             'stroke-width:' + strokeWidth
+    }));
+  });
+  var nodeStep = n > 1 ? NODE_WINDOW / (n - 1) : 0;
+  pts.forEach(function (p, idx) {
+    nodes.appendChild(el('circle', {
+      'class': 'mst-node', cx: p[0], cy: p[1], r: r,
+      style: 'animation-delay:' + (NODE_START + idx * nodeStep).toFixed(3) + 's'
+    }));
+  });
+
+  // Replace the fallback drawing, keeping <defs> and its gradient.
+  var old = svg.querySelectorAll(':scope > g');
+  for (var d = 0; d < old.length; d++) svg.removeChild(old[d]);
+  svg.appendChild(edges);
+  svg.appendChild(nodes);
+  svg.setAttribute('aria-label', choice === URSA
+    ? 'Ursa Major: the nineteen stars of the bear, joined by their minimum spanning tree.'
+    : 'A minimum spanning tree: the smallest set of connections joining every point.');
+})();
+</script>
 
 </body>
 </html>
